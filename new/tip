@@ -1,0 +1,24 @@
+<?php
+mysql_connect("waterdata.glwi.uwm.edu","shipuser","arrrrr");
+mysql_select_db("neeskay");
+$date = floor($_GET['date']/1000);
+$query = "select distinct concat(mid(recdate, 1, 16),':00') as recminute from trackingfast where recdate between convert_tz(mid(convert_tz('".date('Y-m-d H:i:s',$date)."', 'GMT','SYSTEM'),1,10),'SYSTEM','GMT') AND convert_tz(mid(convert_tz('".date('Y-m-d H:i:s',($date+86400*5))."', 'GMT','SYSTEM'),1,10),'SYSTEM','GMT')";
+//echo $query;
+$query = "create temporary table recminq $query";
+$result = mysql_query($query);
+$query2 = "select recdate,gpslat,gpslng from trackingfast, recminq where trackingfast.recdate = recminq.recminute order by recminq.recminute";
+$result = mysql_query($query2);
+//echo mysql_error();
+$count = 0;
+while ($row=mysql_fetch_array($result)) {
+	if ($row['gpslat'] != 0 && $row['gpslng'] != 0) {
+		$track .= "|".round($row['gpslat'],2).",".round($row['gpslng'],2);
+	}
+	$count++;
+	//if ($count > 20) break;
+	//echo $row[recdate].",".$row['gpslat'].",".$row['gpslng']."<br>\n";
+}
+file_put_contents("x",$track);
+header("Status: 302 Moved");
+header("Location: http://maps.google.com/maps/api/staticmap?path=color:0x0000FF80|weight:5$track&size=100x100&sensor=false");
+?>
