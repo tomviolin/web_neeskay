@@ -370,7 +370,7 @@ while ($row = mysqli_fetch_array($result)) {
 	if ($row['depthm'] == "") {
 		$datay2[$i] = "";
 	} else {
-		$datay2[$i] = - $row['depthm'];
+		@ $datay2[$i] = - $row['depthm'];
 	}
 	if ($maxdepth < $row['depthm']) {
 		$maxdepth = $row['depthm'];
