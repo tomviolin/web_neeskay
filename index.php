@@ -306,11 +306,11 @@ function doDownload(a,maps) {
 	//	newurl += "&calibdata=yes";
 	//}
 	if (a >= 1) {
-		newurl += "&path="+(a+0);
+		newurl += "&path="+(a-0);
 	}
 	// alert('Downloading '+newurl);
 	if (maps && maps == 1) {
-		newurl = "googlemaps.php?query=" + escape(newurl+"&reallyskip=10");
+		newurl = "esrifeature.php?query=" + escape(newurl+"&reallyskip=1");
 		window.open(newurl);
 	} else {
 		document.location.href = newurl; //+"&reallyskip=10";
@@ -412,7 +412,7 @@ table.toolbar td a {
 <td valign=middle><font size=2>Save Data As:</font></td>
 <td valign=bottom><a href="javascript:doDownload();" title="Save CSV file of displayed data" alt="Save CSV file of displayed data"><img src="images/save_csv.gif" border=0><br>Excel CSV</a></td>
 <td valign=bottom><a href="javascript:doDownload(1);" title="Download Google Earth KML file of ship's path" alt="Download Google Earth KML file of ship's path"><img src="images/gedownload.gif" border=0><br>KML</a></td>
-<td valign=bottom><a href="javascript:void(doDownload(1,1));" title="Display ship's path in Google Maps" alt="Display ship's path in Google Maps"><img src="images/gmm.png" border=0><br>Google Maps</a></td>
+<td valign=bottom><a href="javascript:void(doDownload(1,1));" title="Display ship's path in a ESRI Leaflet Map" alt="Display ship's path in an ESRI Leaflet Map"><img src="images/gmm.png" border=0><br>ESRI Leaflet Map</a></td>
 <td valign=bottom><a href="javascript:doDownload(2);" title="Download Google Earth KML w/Depths" alt="Download Google Earth KML w/Depths"><img src="images/gedownload.gif" border=0><br>GE Points</a></td>
 <!-- does not work: <a href="javascript:doDownload(2,1);">[Google Map]</a> -->
 </tr></table>

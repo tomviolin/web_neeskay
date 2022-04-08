@@ -5,6 +5,7 @@ require_once("jpgraph-current/src/jpgraph.php");
 require_once("jpgraph-current/src/jpgraph_line.php");
 require_once("jpgraph-current/src/jpgraph_date.php");
 require_once("localreround.php");
+error_reporting(E_ERROR);
 
 global $dateformat;
 
@@ -23,7 +24,8 @@ function DepthCallback($label) {
 	return - $label;
 }
 
-$con = mysqli_connect("waterdata.glwi.uwm.edu","shipuser","arrrrr");
+require ("data.php");
+//$con = mysqli_connect("almamater.edu","shipuser","wowthemwaves");
 mysqli_select_db ($con, "neeskay");
 
 // **** Process the arguments ****
@@ -165,7 +167,8 @@ if ($_REQUEST['csvdownload'] == "yes" && $_REQUEST['path'] == '') {
 			}
 			echo "DateTime,GPS_Lat,GPS_Long,Depth_m,Temp_C,GPS_FixQuality,GPS_n_Sat,GPS_HDoP,GPS_Altitude,GPS_T_TMG,GPS_M_TMG,GPS_SOG_N,GPS_SOG_K,GPS_MagVar"
 				. $ysi_headers."\n"; #,YSI_Time,YSI_Temp,YSI_Cond,YSI_DO,YSI_DOchrg,YSI_Depth,YSI_pH,YSI_Turb,YSI_Chlor,YSI_ChlorRFU,YSI_Battery\n";
-			$currentysicount = count($ysilayout);
+			error_reporting(E_ERROR);
+			$currentysicount = @count($ysilayout);
 		}
 		$currentysilayout = $row['ysi_layout_id'];
 		echo $row['recdate'].",".$row['gpslat'].','.$row['gpslng'].",".
@@ -213,13 +216,13 @@ if ($_REQUEST['csvdownload'] == "yes" && $_REQUEST['path'] == '1') {
                 </IconStyle>
                 <LineStyle>
                         <color>ffFF00ff</color>
-                        <width>5</width>
+                        <width>9</width>
                 </LineStyle>
         </Style>
         <Style id="sn_ylw-pushpin">
                 <LineStyle>
                         <color>ff9900ff</color>
-                        <width>5</width>
+                        <width>9</width>
                 </LineStyle>
         </Style>
         <StyleMap id="msn_ylw-pushpin">
@@ -252,11 +255,27 @@ _PATH_;
 	echo "	<tessellate>1</tessellate>\n";
 	echo "	<coordinates>\n";
 /* -112.0814237830345,36.10677870477137,0 -112.0870267752693,36.0905099328766,0 */
+	$kgpslng = null;
+	$kgpslat = null;
 	while ($row = mysqli_fetch_array($result)) {
 		// idiot check the data- assume ship is in western
 		// and northern hemispheres
+		$gpslat = $row['gpslat'] - 0.0;
+		$gpslng = $row['gpslng'] - 0.0;
 		if ($row['gpslng'] < 0 && $row['gpslat'] > 0) {
-			echo $row['gpslng'].",".$row['gpslat'].",0\n";
+			if (is_null($kgpslng) && is_null($kgpslat)) {
+				$kgpslat = $gpslat;
+				$kgpslng = $gpslng;
+			}
+			$speed = $row['gpssogk'];
+			$gpshdop = $row['gpshdop'];   // range: 0 - 5.6
+			$kratio = 1.0/(1.0+$gpshdop*$gpshdop); // range: 1 - 0
+			$kgpslat = $kgpslat * (1.0-$kratio) + $gpslat * $kratio;
+			$kgpslng = $kgpslng * (1.0-$kratio) + $gpslng * $kratio;
+
+			//echo $row['gpslng'].",".$row['gpslat'].",0\n";
+			//
+			echo $kgpslng.",".$kgpslat.",0\n";
 		}
 	}
 

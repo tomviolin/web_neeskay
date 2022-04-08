@@ -2,10 +2,11 @@ FROM php:7.4-apache
 
 MAINTAINER Tom Hansen "tomh@uwm.edu"
 
-# COPY ./.my.cnf /root/
-COPY . /var/www/html/neeskay
+RUN echo deb http://http.us.debian.org/debian bullseye main contrib non-free >> /etc/apt/sources.list
+# RUN apt-get update && apt-get install -y ttf-mscorefonts-installer
 
 RUN apt-get update && apt-get install -y \
+	ttf-mscorefonts-installer \
         libfreetype6-dev \
         libjpeg62-turbo-dev \
         libpng-dev \
@@ -14,16 +15,16 @@ RUN apt-get update && apt-get install -y \
 
 RUN docker-php-ext-install mysqli
 
-RUN echo deb http://http.us.debian.org/debian bullseye main contrib non-free >> /etc/apt/sources.list
-RUN apt-get update && apt-get install -y ttf-mscorefonts-installer
 
+# COPY ./.my.cnf /root/
+COPY . /var/www/html/neeskay
 
 
 ###  TIMEZONE FIX  (AIN'T IT PURRDY?) ###
-RUN ln -fs /usr/share/zoneinfo/America/Chicago /etc/localtime
-RUN dpkg-reconfigure --frontend noninteractive tzdata
-COPY ./mkphptz.sh .
-RUN ./mkphptz.sh
+#RUN ln -fs /usr/share/zoneinfo/America/Chicago /etc/localtime
+#RUN dpkg-reconfigure --frontend noninteractive tzdata
+#COPY ./mkphptz.sh .
+#RUN ./mkphptz.sh
 
 
 
