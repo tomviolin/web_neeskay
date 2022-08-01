@@ -28,9 +28,9 @@ COPY . /var/www/html/neeskay
 
 
 
-RUN ln -fs /usr/share/zoneinfo/America/Chicago /etc/localtime
-RUN dpkg-reconfigure --frontend noninteractive tzdata
-RUN /var/www/html/neeskay/mkphptz.sh
-RUN echo '[mysql]' > /root/.my.cnf
-RUN echo 'host=waterdata.glwi.uwm.edu' >> /root/.my.cnf
+RUN ln -fs /usr/share/zoneinfo/America/Chicago /etc/localtime && \
+    dpkg-reconfigure --frontend noninteractive tzdata && \
+    /var/www/html/neeskay/mkphptz.sh
+#RUN echo '[mysql]' > /root/.my.cnf && \
+#    echo 'host=waterdata.glwi.uwm.edu' >> /root/.my.cnf
 
