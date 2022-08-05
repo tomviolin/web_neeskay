@@ -443,20 +443,16 @@ function timeString() {
 var xmlhttp;
 function checkError() {
 	xmlhttp = new XMLHttpRequest();  
-	hoststr = document.location.protocol + "//"
-		+ document.location.host
-		+ document.location.port
-		+ "/neeskay/showerr.php";
+	hoststr = "showerr.php";
 	xmlhttp.open("GET", hoststr, true);  
 	xmlhttp.onreadystatechange = function() {  
 		if(xmlhttp.readyState == 4)  
 		//alert(new XMLSerializer().serializeToString(xmlhttp.responseXML));  
 		var rtext = xmlhttp.responseText;
-		
-		if ((rtext) && (rtext.length > 5)) {
+		if ((rtext) && (rtext[0] == 'E')) {
 			headtext = "<font color=red>Data Error:<br><font size=2>" + xmlhttp.responseText + "</font></font>";
 		} else {
-			headtext = "Ship Data Monitoring System<br><font size=2>" + timeString() + "<" + "/" + "font>";
+			headtext = "Ship Data Monitoring System<br><font size=2><span id=\"datatime\">" + rtext + "</span><" + "/" + "font>";
 		}
 		document.getElementById("headline").innerHTML = headtext;
 		// document.location.href="#top";

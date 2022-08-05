@@ -92,6 +92,9 @@ $query = "select convert_tz('".$starttime."','$TZ','GMT') as starttime_gmt, conv
 if ($_REQUEST['debug']=='y') { echo "query='$query'<br>\n"; }
 $result = mysqli_query($con, $query);
 $trow = mysqli_fetch_array($result);
+if ($_REQUEST['debug'] == 'Y') {
+	print_r($trow);
+}
 $starttime_gmt = $trow['starttime_gmt'];
 $endtime_gmt   = $trow['endtime_gmt'];
 
