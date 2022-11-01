@@ -1,4 +1,5 @@
 <?php
+ini_set('memory_limit','512000000');
 $TZ = 'America/Chicago';
 define('TTF_DIR','/usr/share/fonts/truetype/msttcorefonts/');
 require_once("jpgraph-current/src/jpgraph.php");
@@ -95,7 +96,7 @@ $trow = mysqli_fetch_array($result);
 $starttime_gmt = $trow['starttime_gmt'];
 $endtime_gmt   = $trow['endtime_gmt'];
 
-$result = mysqli_query($con, "select count(*) as reccount,max(if(tempc>0 and tempc<100,tempc,null)) as maxtemp, max(depthm) as maxdepthm from trackingdata_flex where recdate >= '".$starttime_gmt."' and recdate <= '".$endtime_gmt."' order by recdate");
+$result = mysqli_query($con, "select count(*) as reccount,max(if(tempc>0 and tempc<100,tempc,null)) as maxtemp, max(depthm) as maxdepthm from trackingdata_flex where recdate >= '".$starttime_gmt."' and recdate <= '".$endtime_gmt."' and gpslat between 20 and 80 and gpslng between -100 and -70 order by recdate");
 $row = mysqli_fetch_array($result);
 $numrows = $row["reccount"];
 $maxtemp = $row["maxtemp"];
@@ -119,7 +120,7 @@ mysqli_query($con,"set @id := 0");
 
 if ($_REQUEST['csvdownload'] == "yes" && $_REQUEST['path'] == '') {
 	// CSV download requested
-	$query=("select convert_tz(recdate,'GMT','$TZ') as lrecdate, trackingdata_flex.* from trackingdata_flex where recdate >= '".$starttime_gmt."' and recdate <= '".$endtime_gmt."' /* and recordid mod $skip = 0 */ order by recdate");
+	$query=("select convert_tz(recdate,'GMT','$TZ') as lrecdate, trackingdata_flex.* from trackingdata_flex where recdate >= '".$starttime_gmt."' and recdate <= '".$endtime_gmt."' /* and recordid mod $skip = 0 */ and gpslat between 20 and 80 and gpslng between -100 and -70 order by recdate");
 	if ($_REQUEST['debug']=='y') {
 		echo "query='$query'\n";
 	}
@@ -191,7 +192,7 @@ if ($_REQUEST['csvdownload'] == "yes" && $_REQUEST['path'] == '') {
 
 if ($_REQUEST['csvdownload'] == "yes" && $_REQUEST['path'] == '1') {
 	// KML path download requested
-	$query=("select convert_tz(recdate,'GMT','$TZ') as lrecdate, trackingdata_flex.* from trackingdata_flex where recdate >= '".$starttime_gmt."' and recdate <= '".$endtime_gmt."' and recordid mod $skip = 0 order by recdate");
+	$query=("select convert_tz(recdate,'GMT','$TZ') as lrecdate, trackingdata_flex.* from trackingdata_flex where recdate >= '".$starttime_gmt."' and recdate <= '".$endtime_gmt."' and recordid mod $skip = 0 and gpslat between 20 and 80 and gpslng between -100 and -70  order by recdate");
 	if ($_REQUEST['debug']=='y') {
 		echo "query='$query'\n";
 	}
@@ -291,7 +292,7 @@ _PATH_;
 if ($_REQUEST['csvdownload'] == "yes" && $_REQUEST['path'] == '2') {
 	// KML points download requested
 
-	$query=("select convert_tz(recdate,'GMT','$TZ') as lrecdate, trackingdata_flex.* from trackingdata_flex where recdate >= '".$starttime_gmt."' and recdate <= '".$endtime_gmt."' and recordid mod $skip = 0 order by recdate");
+	$query=("select convert_tz(recdate,'GMT','$TZ') as lrecdate, trackingdata_flex.* from trackingdata_flex where recdate >= '".$starttime_gmt."' and recdate <= '".$endtime_gmt."' and recordid mod $skip = 0  and gpslat between 20 and 80 and gpslng between -100 and -70  order by recdate");
 	if ($_REQUEST['debug']=='y') {
 		echo "query='$query'\n";
 	}
@@ -353,7 +354,7 @@ if ($_REQUEST['csvdownload'] == "yes" && $_REQUEST['path'] == '2') {
 
 // graph display
 
-$query=("select convert_tz(recdate,'GMT','$TZ') as lrecdate, tempc, depthm from trackingdata_flex where (recdate between '".$starttime_gmt."' and '".$endtime_gmt."') and recordid mod $skip = 0 order by recdate");
+$query=("select convert_tz(recdate,'GMT','$TZ') as lrecdate, tempc, depthm from trackingdata_flex where (recdate between '".$starttime_gmt."' and '".$endtime_gmt."') and recordid mod $skip = 0 and gpslat between 20 and 80 and gpslng between -100 and -70  order by recdate");
 if ($_REQUEST['debug']=='y') {
 	echo "query='$query'\n";
 }
