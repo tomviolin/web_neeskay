@@ -11,9 +11,8 @@ RUN apt-get update && apt-get install -y \
         libjpeg62-turbo-dev \
         libpng-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) gd
-
-RUN docker-php-ext-install mysqli
+    && docker-php-ext-install -j$(nproc) gd \
+    && docker-php-ext-install mysqli
 
 
 # COPY ./.my.cnf /root/
@@ -28,9 +27,9 @@ COPY . /var/www/html/neeskay
 
 
 
-RUN ln -fs /usr/share/zoneinfo/America/Chicago /etc/localtime
-RUN dpkg-reconfigure --frontend noninteractive tzdata
-RUN /var/www/html/neeskay/mkphptz.sh
-RUN echo '[mysql]' > /root/.my.cnf
-RUN echo 'host=waterdata.glwi.uwm.edu' >> /root/.my.cnf
+RUN ln -fs /usr/share/zoneinfo/America/Chicago /etc/localtime && \
+    dpkg-reconfigure --frontend noninteractive tzdata && \
+    /var/www/html/neeskay/mkphptz.sh
+#RUN echo '[mysql]' > /root/.my.cnf && \
+#    echo 'host=waterdata.glwi.uwm.edu' >> /root/.my.cnf
 
