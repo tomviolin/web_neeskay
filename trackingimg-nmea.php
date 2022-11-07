@@ -195,7 +195,7 @@ if ($_REQUEST['csvdownload'] == "yes" && $_REQUEST['path'] == '') {
 
 if ($_REQUEST['csvdownload'] == "yes" && $_REQUEST['path'] == '1') {
 	// KML path download requested
-	$query=("select convert_tz(recdate,'GMT','$TZ') as lrecdate, trackingdata_flex.* from trackingdata_flex where recdate >= '".$starttime_gmt."' and recdate <= '".$endtime_gmt."' and recordid mod $skip = 0 and gpslat between 20 and 80 and gpslng between -100 and -70  order by recdate");
+	$query=("select convert_tz(recdate,'GMT','$TZ') as lrecdate, recdate,gpslat,gpslng,gpssogk,gpshdop from trackingdata_flex tf where recdate >= '".$starttime_gmt."' and recdate <= '".$endtime_gmt."' and recordid mod $skip = 0 and gpslat between 20 and 80 and gpslng between -100 and -70  order by recdate");
 	if ($_REQUEST['debug']=='y') {
 		echo "query='$query'\n";
 	}
@@ -243,25 +243,37 @@ _PATH_;
 
 	echo "<Placemark>\n";
 	echo "<name>Neeskay Path</name>\n";
-	echo "<description>Path of R/V Neeskay from $starttime to $endtime</description>\n";
+	#echo "<description>Path of R/V Neeskay from $starttime to $endtime</description>\n";
 	echo "<styleUrl>#msn_ylw-pushpin</styleUrl>\n";
-	/*
-	<LookAt>
-		<longitude>-112.0822680013139</longitude>
-		<latitude>36.09825589333556</latitude>
-		<altitude>0</altitude>
-		<range>2889.145007690472</range>
-		<tilt>62.04855796276328</tilt>
-		<heading>103.8120432044965</heading>
-	</LookAt>
-	*/
 	echo "<LineString>\n";
 	echo "	<tessellate>1</tessellate>\n";
 	echo "	<coordinates>\n";
 /* -112.0814237830345,36.10677870477137,0 -112.0870267752693,36.0905099328766,0 */
 	$kgpslng = null;
 	$kgpslat = null;
+	$prevtime = 0;
+	$firstthis = 0;
 	while ($row = mysqli_fetch_array($result)) {
+		$thistime = strtotime($row['recdate']);
+		if ($firstthis == 0) $firstthis = $thistime;
+		if ($prevtime > 0 && $thistime - $prevtime > 60) {
+
+			echo "</coordinates>\n";
+			echo "</LineString>\n";
+			$thisstarttime = date('Y-m-d H:i:s', ($firstthis));
+			$thisendtime = date('Y-m-d H:i:s', ($prevtime));
+			echo "<description>Path of R/V Neeskay from $thisstarttime to $thisendtime</description>\n";
+			echo "</Placemark>\n";
+			echo "<Placemark>\n";
+			echo "<name>Neeskay Path</name>\n";
+			echo "<description>Path of R/V Neeskay from $starttime to $endtime</description>\n";
+			echo "<styleUrl>#msn_ylw-pushpin</styleUrl>\n";
+			echo "<LineString>\n";
+			echo "	<tessellate>1</tessellate>\n";
+			echo "	<coordinates>\n";
+			$firstthis = $thistime;
+		}
+		$prevtime = $thistime;
 		// idiot check the data- assume ship is in western
 		// and northern hemispheres
 		$gpslat = $row['gpslat'] - 0.0;
@@ -285,6 +297,9 @@ _PATH_;
 
 	echo "</coordinates>\n";
 	echo "</LineString>\n";
+	$thisstarttime = date('Y-m-d H:i:s', ($firstthis));
+	$thisendtime = date('Y-m-d H:i:s', ($prevtime));
+	echo "<description>Path of R/V Neeskay from $thisstarttime to $thisendtime</description>\n";
 	echo "</Placemark>\n";
 	echo "</Document>\n";
 	echo "</kml>\n";
@@ -295,7 +310,7 @@ _PATH_;
 if ($_REQUEST['csvdownload'] == "yes" && $_REQUEST['path'] == '2') {
 	// KML points download requested
 
-	$query=("select convert_tz(recdate,'GMT','$TZ') as lrecdate, trackingdata_flex.* from trackingdata_flex where recdate >= '".$starttime_gmt."' and recdate <= '".$endtime_gmt."' and recordid mod $skip = 0  and gpslat between 20 and 80 and gpslng between -100 and -70  order by recdate");
+	$query=("select convert_tz(recdate,'GMT','$TZ') as lrecdate, recdate,gpslat,gpslng,depthm from trackingdata_flex where recdate >= '".$starttime_gmt."' and recdate <= '".$endtime_gmt."' and recordid mod $skip = 0  and gpslat between 20 and 80 and gpslng between -100 and -70  order by recdate");
 	if ($_REQUEST['debug']=='y') {
 		echo "query='$query'\n";
 	}
