@@ -23,6 +23,8 @@ var starttime=escape(minutesago2str(graphRange));
 var last1URL  = baseURL + "&starttime="+starttime+"&dateformat=short";
 var currentURL = last1URL;
 <?php
+$host = 'localhost';
+
 	if (isset($_GET['startdate'])) {
 		$grRangeDefault = 5;
 		echo "graphRange = $grRangeDefault;\n";

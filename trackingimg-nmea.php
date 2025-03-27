@@ -1,11 +1,61 @@
 <?php
+system("date >> /tmp/dbcons");
+file_put_contents("/tmp/dbcon.log","checkpoint 0\n",FILE_APPEND);
 ini_set('memory_limit','512000000');
 $TZ = 'America/Chicago';
 define('TTF_DIR','/usr/share/fonts/truetype/msttcorefonts/');
 require_once("jpgraph-current/src/jpgraph.php");
 require_once("jpgraph-current/src/jpgraph_line.php");
 require_once("jpgraph-current/src/jpgraph_date.php");
-require_once("localreround.php");
+//require_once("localreround.php");
+
+
+
+file_put_contents("/tmp/dbcon.log","checkpoint 1\n",FILE_APPEND);
+
+function localreround($xmin, $mod) {
+
+	//$mod = 3600*3;
+	//$xminstr = $argv[1];
+	//$xmin = strtotime($xminstr." GMT");
+
+	if ($mod <= 3600) {
+		$xminround = floor($xmin/$mod)*$mod;
+		if ($xminround < $xmin) $xminround += $mod;
+		return $xminround;
+	}
+
+	$xminlclstr = date("M d Y H:i:s", $xmin);
+	$fakelocaldatenum = strtotime($xminlclstr." GMT");
+
+	$roundedfake = floor($fakelocaldatenum/$mod)*$mod;
+	if ($roundedfake < $fakelocaldatenum) {
+		$roundedfake += $mod;
+	}
+
+	// ok now we have a new possible date. convert it back to "GMT" 
+
+	$roundedgmt = strtotime(gmdate("M d Y H:i:s", $roundedfake));
+
+	if ($mod <= 3600) return $roundedgmt;
+
+
+	$roundedrelocal = date("M d Y H:i:s", $roundedgmt);
+
+	$roundedrefake = strtotime($roundedrelocal." GMT");
+	$reroundedrefake = floor($roundedrefake/$mod)*$mod;
+	if ($reroundedrefake < $roundedrefake) {
+		$reroundedrefake += $mod;
+	}
+
+	$reroundedgmt = strtotime(gmdate("M d Y H:i:s", $reroundedrefake));
+
+	return $reroundedgmt;
+}
+
+
+
+file_put_contents("/tmp/dbcon.log","checkpoint 2\n",FILE_APPEND);
 error_reporting(E_ERROR);
 
 global $dateformat;
@@ -16,6 +66,7 @@ $rightmargin = 55;
 $topmargin = 30;
 $botmargin = 130;
 
+file_put_contents("/tmp/dbcon.log","checkpoint 3\n",FILE_APPEND);
 function DateTimeCallback ($label) {
 	global $dateformat;
 	return date($dateformat, $label);
@@ -25,9 +76,10 @@ function DepthCallback($label) {
 	return - $label;
 }
 
+file_put_contents("/tmp/dbcon.log","checkpoint 4\n",FILE_APPEND);
 require ("data.php");
-//$con = mysqli_connect("almamater.edu","shipuser","wowthemwaves");
 mysqli_select_db ($con, "neeskay");
+file_put_contents("/tmp/dbcon.log","checkpoint 5\n",FILE_APPEND);
 
 // **** Process the arguments ****
 // ** start time **
@@ -90,6 +142,7 @@ if ($_REQUEST['debug']=='y') { echo "starttime=$starttime, endtime=$endtime<br>\
 
 // convert starttime and endtime to GMT using mysql
 $query = "select convert_tz('".$starttime."','$TZ','GMT') as starttime_gmt, convert_tz('".$endtime."','$TZ','GMT') as endtime_gmt";
+file_put_contents("/tmp/broke.sql",$query."\n");
 if ($_REQUEST['debug']=='y') { echo "query='$query'<br>\n"; }
 $result = mysqli_query($con, $query);
 $trow = mysqli_fetch_array($result);
@@ -98,8 +151,9 @@ if ($_REQUEST['debug'] == 'Y') {
 }
 $starttime_gmt = $trow['starttime_gmt'];
 $endtime_gmt   = $trow['endtime_gmt'];
-
-$result = mysqli_query($con, "select count(*) as reccount,max(if(tempc>0 and tempc<100,tempc,null)) as maxtemp, max(depthm) as maxdepthm from trackingdata_flex where recdate >= '".$starttime_gmt."' and recdate <= '".$endtime_gmt."' and gpslat between 20 and 80 and gpslng between -100 and -70 order by recdate");
+$query = "select count(*) as reccount,max(if(tempc>0 and tempc<100,tempc,null)) as maxtemp, max(depthm) as maxdepthm from trackingdata_flex force index (recdate_gps_lat) where recdate >= '".$starttime_gmt."' and recdate <= '".$endtime_gmt."' and gpslat between 20 and 80 and gpslng between -100 and -70 order by recdate";
+file_put_contents("/dev/shm/slowquery.sql",$query);
+$result = mysqli_query($con, $query);
 $row = mysqli_fetch_array($result);
 $numrows = $row["reccount"];
 $maxtemp = $row["maxtemp"];
@@ -123,7 +177,7 @@ mysqli_query($con,"set @id := 0");
 
 if ($_REQUEST['csvdownload'] == "yes" && $_REQUEST['path'] == '') {
 	// CSV download requested
-	$query=("select convert_tz(recdate,'GMT','$TZ') as lrecdate, trackingdata_flex.* from trackingdata_flex where recdate >= '".$starttime_gmt."' and recdate <= '".$endtime_gmt."' /* and recordid mod $skip = 0 */ and gpslat between 20 and 80 and gpslng between -100 and -70 order by recdate");
+	$query=("select convert_tz(recdate,'GMT','$TZ') as lrecdate, trackingdata_flex.* from trackingdata_flex force index (recdate_gps_lat) where recdate >= '".$starttime_gmt."' and recdate <= '".$endtime_gmt."' /* and recordid mod $skip = 0 */ and gpslat between 20 and 80 and gpslng between -100 and -70 order by recdate");
 	if ($_REQUEST['debug']=='y') {
 		echo "query='$query'\n";
 	}
@@ -195,7 +249,7 @@ if ($_REQUEST['csvdownload'] == "yes" && $_REQUEST['path'] == '') {
 
 if ($_REQUEST['csvdownload'] == "yes" && $_REQUEST['path'] == '1') {
 	// KML path download requested
-	$query=("select convert_tz(recdate,'GMT','$TZ') as lrecdate, recdate,gpslat,gpslng,gpssogk,gpshdop from trackingdata_flex tf where recdate >= '".$starttime_gmt."' and recdate <= '".$endtime_gmt."' and recordid mod $skip = 0 and gpslat between 20 and 80 and gpslng between -100 and -70  order by recdate");
+	$query=("select convert_tz(recdate,'GMT','$TZ') as lrecdate, recdate,gpslat,gpslng,gpssogk,gpshdop from trackingdata_flex tf force index (recdate_gps_lat) where recdate >= '".$starttime_gmt."' and recdate <= '".$endtime_gmt."' and recordid mod $skip = 0 and gpslat between 20 and 80 and gpslng between -100 and -70  order by recdate");
 	if ($_REQUEST['debug']=='y') {
 		echo "query='$query'\n";
 	}
@@ -310,7 +364,7 @@ _PATH_;
 if ($_REQUEST['csvdownload'] == "yes" && $_REQUEST['path'] == '2') {
 	// KML points download requested
 
-	$query=("select convert_tz(recdate,'GMT','$TZ') as lrecdate, recdate,gpslat,gpslng,depthm from trackingdata_flex where recdate >= '".$starttime_gmt."' and recdate <= '".$endtime_gmt."' and recordid mod $skip = 0  and gpslat between 20 and 80 and gpslng between -100 and -70  order by recdate");
+	$query=("select convert_tz(recdate,'GMT','$TZ') as lrecdate, recdate,gpslat,gpslng,depthm from trackingdata_flex force index (recdate_gps_lat) where recdate >= '".$starttime_gmt."' and recdate <= '".$endtime_gmt."' and recordid mod $skip = 0  and gpslat between 20 and 80 and gpslng between -100 and -70  order by recdate");
 	if ($_REQUEST['debug']=='y') {
 		echo "query='$query'\n";
 	}
@@ -372,7 +426,7 @@ if ($_REQUEST['csvdownload'] == "yes" && $_REQUEST['path'] == '2') {
 
 // graph display
 
-$query=("select convert_tz(recdate,'GMT','$TZ') as lrecdate, tempc, depthm from trackingdata_flex where (recdate between '".$starttime_gmt."' and '".$endtime_gmt."') and recordid mod $skip = 0 and gpslat between 20 and 80 and gpslng between -100 and -70  order by recdate");
+$query=("select convert_tz(recdate,'GMT','$TZ') as lrecdate, tempc, depthm from trackingdata_flex force index (recdate_gps_lat) where (recdate between '".$starttime_gmt."' and '".$endtime_gmt."') and recordid mod $skip = 0 and gpslat between 20 and 80 and gpslng between -100 and -70  order by recdate");
 if ($_REQUEST['debug']=='y') {
 	echo "query='$query'\n";
 }
@@ -405,7 +459,7 @@ while ($row = mysqli_fetch_array($result)) {
 	if ($row['depthm'] == "") {
 		$row['depthm'] = $lastdepth;
 	}
-	if ($row['depthm'] == "") {
+	if (!is_numeric($row['depthm']))  {
 		$datay2[$i] = "";
 	} else {
 		@ $datay2[$i] = - $row['depthm'];
